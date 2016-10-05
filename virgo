@@ -50,13 +50,16 @@ function plugin_install() {
 	git clone "$plug_name"
 
 	generate_autoload
+
+	# Generate helptags
+	vim -c "helpt ALL" -c "quit"
 }
 
 # List installed plugins
 function plugin_list() {
 	cd ~/.vim/plugins || exit 1
 	for plugin_name in *; do
-		echo $plugin_name
+		echo "$plugin_name"
 	done
 }
 
