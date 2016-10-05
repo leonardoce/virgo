@@ -41,7 +41,7 @@ function plugin_install() {
 	fi
 
 	plug_name="$1"
-	if [[ ! "$plug_name" == "http://*" ]]; then
+	if [[ ! "$plug_name" == http://* ]] && [[ ! "$plug_name" == https://* ]]; then
 		plug_name="http://github.com/$plug_name"
 		echo "Assuming git repo at $plug_name"
 	fi	
