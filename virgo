@@ -72,12 +72,13 @@ function plugin_remove() {
 
 	cd ~/.vim/plugins || exit 1
 
-	if [ ! -d "$1" ]; then
-		error "Plugin $1 not installed"
-		exit 1
-	fi
-
-	rm -rf "$1"
+	for plugin_name in "$@"; do
+		if [ ! -d "$plugin_name" ]; then
+			error "Plugin $plugin_name not installed"
+		else
+			rm -rf "$plugin_name"
+		fi
+	done
 }
 
 # Update plugins
@@ -125,7 +126,7 @@ if [ "$1" == "install" ]; then
 elif [ "$1" == "list" ]; then
 	plugin_list "$2"
 elif [ "$1" == "remove" ]; then
-	plugin_remove "$2"
+	plugin_remove "${@:2}"
 elif [ "$1" == "update" ]; then
 	plugin_update "$2"
 else
