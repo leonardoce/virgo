@@ -30,6 +30,7 @@ function error() {
 # plugins
 function create_required_dirs() {
 	mkdir -p ~/.vim/plugins
+	mkdir -p ~/.vim/plugins_disabled
 	mkdir -p ~/.vim/autoload
 }
 
@@ -49,17 +50,67 @@ function plugin_install() {
 	cd ~/.vim/plugins || exit 1
 	git clone "$plug_name"
 
+	# Regenerate the autoload script
 	generate_autoload
 
 	# Generate helptags
 	vim -c "helpt ALL" -c "quit"
 }
 
+# Disable a plugin
+function plugin_disable() {
+	if [ -z "$1" ]; then
+		error "Usage: $0 disable [plugin-name]"
+		exit 1
+	fi
+
+	cd ~/.vim/plugins || exit 1
+
+	for plugin_name in "$@"; do
+		if [ ! -d "$plugin_name" ]; then
+			error "Plugin $plugin_name not installed"
+		else
+			mv "$plugin_name" ~/.vim/plugins_disabled
+		fi
+	done
+
+	# Regenerate the autoload script
+	generate_autoload
+}
+
+# Enable a plugin
+function plugin_enable() {
+	if [ -z "$1" ]; then
+		error "Usage: $0 enable [plugin-name]"
+		exit 1
+	fi
+
+	cd ~/.vim/plugins_disabled || exit 1
+
+	for plugin_name in "$@"; do
+		if [ ! -d "$plugin_name" ]; then
+			error "Plugin $plugin_name not disabled"
+		else
+			mv "$plugin_name" ~/.vim/plugins
+		fi
+	done
+
+	# Regenerate the autoload script
+	generate_autoload
+}
+
 # List installed plugins
 function plugin_list() {
+	# List active plugins
 	cd ~/.vim/plugins || exit 1
 	for plugin_name in *; do
 		echo "$plugin_name"
+	done
+
+	# List disabled plugins
+	cd ~/.vim/plugins_disabled || exit 1
+	for plugin_name in *; do
+		echo "(disabled) $plugin_name"
 	done
 }
 
@@ -70,13 +121,12 @@ function plugin_remove() {
 		exit 1
 	fi
 
-	cd ~/.vim/plugins || exit 1
-
 	for plugin_name in "$@"; do
-		if [ ! -d "$plugin_name" ]; then
+		if [ ! -d "$HOME/.vim/plugins/$plugin_name" ] && [ ! -d "$HOME/.vim/plugins_disabled/$plugin_name" ]; then
 			error "Plugin $plugin_name not installed"
 		else
-			rm -rf "$plugin_name"
+			rm -rf "$HOME/.vim/plugins/$plugin_name"
+			rm -rf "$HOME/.vim/plugins_disabled/$plugin_name"
 		fi
 	done
 }
@@ -109,6 +159,8 @@ function usage() {
 	error "install [git-repo-url]"
 	error "list"
 	error "remove [plugin-name]"
+	error "enable [plugin-name]"
+	error "disable [plugin-name]"
 	error "update"
 	error
 	error "Virgo, Copyright (C) 2016 Leonardo Cecchi"
@@ -127,6 +179,10 @@ elif [ "$1" == "list" ]; then
 	plugin_list "$2"
 elif [ "$1" == "remove" ]; then
 	plugin_remove "${@:2}"
+elif [ "$1" == "enable" ]; then
+	plugin_enable "${@:2}"
+elif [ "$1" == "disable" ]; then
+	plugin_disable "${@:2}"
 elif [ "$1" == "update" ]; then
 	plugin_update "$2"
 else
